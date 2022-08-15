@@ -12,7 +12,6 @@ interface RemovalPatch {
     type: removalType
     from: number
     length: number
-    text: string
 }
 
 // 定义类型
@@ -30,11 +29,6 @@ export function calculatePatch(diff: Diff[]): Patch[] {
     for (let change of diff) {
         switch (change[0]) {
             case 0 :
-                patches.push({
-                    type: insertTypeValue,
-                    from: index,
-                    text: change[1],
-                })
                 index += change[1].length;
                 break;
             case -1:
@@ -43,7 +37,6 @@ export function calculatePatch(diff: Diff[]): Patch[] {
                     type: removalTypeValue,
                     from: index + length,
                     length,
-                    text: change[1],
                 })
                 break;
             case 1:
