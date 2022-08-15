@@ -1,8 +1,7 @@
 import {diff_match_patch as DMP} from "diff-match-patch"
 import type {Diff} from 'diff-match-patch';
+import * as Path from "path";
 
-
-// 定义接口
 interface InsertPatch {
     type: insertType
     from: number
@@ -13,37 +12,38 @@ interface RemovalPatch {
     type: removalType
     from: number
     length: number
+    text: string
 }
 
 // 定义类型
-type Patch = InsertPatch | RemovalPatch;
-type insertType = "inserts";
-type removalType = "removal";
+export type Patch = InsertPatch | RemovalPatch;
+export type insertType = "inserts";
+export type removalType = "removal";
 // 定义常量
-const insertTypeValue = "inserts";
-const removalTypeValue = "removal";
-// // 临时常量
-// const input: string = `interface RemovalPatch {
-//     type: 'removal'
-//     from: number
-//     length: number
-// }`
-// const output: string = `interface InsertPatch {}`
+export const insertTypeValue = "inserts";
+export const removalTypeValue = "removal";
 
 
-function calculatePatch(diff: Diff[]): Patch[] {
+export function calculatePatch(diff: Diff[]): Patch[] {
     const patches: Patch[] = [];
     let index = 0;
     for (let change of diff) {
         switch (change[0]) {
             case 0 :
+                patches.push({
+                    type: insertTypeValue,
+                    from: index,
+                    text: change[1],
+                })
                 index += change[1].length;
                 break;
             case -1:
+                const length = change[1].length
                 patches.push({
                     type: removalTypeValue,
-                    from: index,
-                    length: change[1].length
+                    from: index + length,
+                    length,
+                    text: change[1],
                 })
                 break;
             case 1:
@@ -61,29 +61,33 @@ function calculatePatch(diff: Diff[]): Patch[] {
     return patches
 }
 
-function applyPatches(input: string, patches: Patch[]) {
-    let text: Array<String> = input.split('');
+export function applyPatches(input: string, patches: Patch[]) {
+    let text = input
     for (let patch of patches) {
         if (patch.type === insertTypeValue) {
-            text.splice(patch.from, 0, ...patch.text.split(''))
+            text = text.slice(0, patch.from) + patch.text + text.slice(patch.from)
         } else if (patch.type === removalTypeValue) {
-            text.splice(patch.from, patch.length)
+            text = text.slice(0, patch.from - patch.length) + text.slice(patch.from)
         }
     }
-    return text.join('');
+    return text;
 }
 
 
-function diffFun(input: string, output: string): Diff[] {
+export function diffFun(input: string, output: string): Diff[] {
     const diff = new DMP();
     const diffResult = diff.diff_main(input, output);
     diff.diff_cleanupSemantic(diffResult)
     return diffResult
 }
 
-export default function (input: string, output: string) {
-    const delta = diffFun(input, output);
-    const patches = calculatePatch(delta);
-    const patchesValue = applyPatches(input, patches)
-    return patchesValue
-}
+// export default function (input: string, output: string) {
+//     const delta = diffFun(input, output);
+//     console.log({delta});
+//     const patches = calculatePatch(delta);
+//     console.log({patches})
+//     const patchesValue = applyPatches(input, patches)
+//     console.log(patchesValue)
+//     return patchesValue
+// }
+
