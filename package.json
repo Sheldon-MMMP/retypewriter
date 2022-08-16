@@ -20,7 +20,6 @@
   "dependencies": {
     "@types/diff-match-patch": "^1.0.32",
     "diff-match-patch": "^1.0.5",
-    "save-dev": "^0.0.1-security",
-    "typeit": "^8.7.0"
+    "save-dev": "^0.0.1-security"
   }
 }
